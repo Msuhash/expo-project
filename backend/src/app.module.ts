@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { DatabaseModule } from './database/database.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { ExposModule } from './modules/expos/expos.module.js';
@@ -14,6 +16,8 @@ import { ActivityModule } from './modules/activity/activity.module.js';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    DatabaseModule,
     UsersModule,
     AuthModule,
     ExposModule,

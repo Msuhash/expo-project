@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import { defineConfig } from "prisma/config";
 
 // Load .env.local first (for Supabase credentials), with fallback to .env
-dotenv.config({ path: ".env.local" });
 dotenv.config();
 
 export default defineConfig({
