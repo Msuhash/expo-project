@@ -63,7 +63,12 @@ export class UsersService {
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        displayName: updateDto.displayName,
+        ...(updateDto.displayName !== undefined && {
+          displayName: updateDto.displayName,
+        }),
+        ...(updateDto.bio !== undefined && {
+          bio: updateDto.bio,
+        }),
       },
     });
     return this.toSafeUser(user);
@@ -78,6 +83,7 @@ export class UsersService {
       username: user.username,
       email: user.email,
       displayName: user.displayName,
+      bio: user.bio,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

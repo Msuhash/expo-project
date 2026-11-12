@@ -50,6 +50,7 @@ export class AuthService {
         email: signupDto.email,
         passwordHash,
         displayName: signupDto.displayName ?? null,
+        bio: signupDto.bio ?? null,
       },
     });
 
@@ -124,6 +125,7 @@ export class AuthService {
       username: user.username,
       email: user.email,
       displayName: user.displayName,
+      bio: user.bio,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

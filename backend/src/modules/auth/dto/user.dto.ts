@@ -42,13 +42,6 @@ export class SignupDto {
         'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
     },
   )
-  @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]).+$/,
-    {
-      message:
-        'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
-    },
-  )
   password: string;
 
   @IsOptional()
@@ -56,6 +49,12 @@ export class SignupDto {
   @MaxLength(50, { message: 'Display name cannot exceed 50 characters' })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   displayName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(250, { message: 'Bio cannot exceed 250 characters' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  bio?: string;
 }
 
 /**
@@ -86,6 +85,12 @@ export class UpdateUserDto {
   @MaxLength(50, { message: 'Display name cannot exceed 50 characters' })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   displayName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(250, { message: 'Bio cannot exceed 250 characters' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  bio?: string;
 }
 
 /**
@@ -97,6 +102,7 @@ export class UserResponseDto {
   username: string;
   email: string;
   displayName: string | null;
+  bio: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
