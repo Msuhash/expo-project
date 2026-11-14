@@ -10,15 +10,102 @@ datasource db {
   provider = "postgresql"
 }
 
+enum ExpoStatus {
+  Draft
+  Published
+  Ongoing
+  Completed
+  Cancelled
+}
+
+enum ExpoRole {
+  Admin
+  Manager
+  Member
+}
+
+enum MembershipStatus {
+  Active
+  Removed
+}
+
 model User {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  email        String   @unique
+  id           String           @id @default(cuid())
+  username     String           @unique
+  email        String           @unique
   passwordHash String
   displayName  String?
   bio          String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  createdExpos Expo[]           @relation("CreatedExpos")
+  memberships  ExpoMembership[]
 
   @@map("users")
+}
+
+model Expo {
+  id                   String           @id @default(cuid())
+  createdById          String
+  createdBy            User             @relation("CreatedExpos", fields: [createdById], references: [id])
+  name                 String
+  slug                 String           @unique
+  description          String?
+  coverImageUrl        String?
+  startAt              DateTime
+  endAt                DateTime
+  venueName            String
+  venueAddress         String
+  capacity             Int?
+  status               ExpoStatus       @default(Draft)
+  registrationEnabled  Boolean          @default(false)
+  registrationDeadline DateTime?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  categories           ExpoCategory[]
+  memberships          ExpoMembership[]
+
+  @@map("expos")
+}
+
+model Category {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  slug      String         @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  expos     ExpoCategory[]
+
+  @@map("categories")
+}
+
+model ExpoCategory {
+  expoId     String
+  categoryId String
+  assignedAt DateTime @default(now())
+
+  expo       Expo     @relation(fields: [expoId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([expoId, categoryId])
+  @@map("expo_categories")
+}
+
+model ExpoMembership {
+  id        String           @id @default(cuid())
+  expoId    String
+  userId    String
+  role      ExpoRole         @default(Member)
+  status    MembershipStatus @default(Active)
+  joinedAt  DateTime         @default(now())
+  removedAt DateTime?
+
+  expo      Expo             @relation(fields: [expoId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expoId, userId])
+  @@map("expo_memberships")
 }
