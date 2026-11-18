@@ -10,6 +10,13 @@ datasource db {
   provider = "postgresql"
 }
 
+enum InvitationStatus {
+  Pending
+  Accepted
+  Declined
+  Revoked
+}
+
 enum ExpoStatus {
   Draft
   Published
@@ -30,27 +37,29 @@ enum MembershipStatus {
 }
 
 model User {
-  id           String           @id @default(cuid())
-  username     String           @unique
-  email        String           @unique
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
   passwordHash String
   displayName  String?
   bio          String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  createdExpos Expo[]           @relation("CreatedExpos")
-  memberships  ExpoMembership[]
+  createdExpos        Expo[]           @relation("CreatedExpos")
+  memberships         ExpoMembership[]
+  sentInvitations     Invitation[]     @relation("SentInvitations")
+  receivedInvitations Invitation[]     @relation("ReceivedInvitations")
 
   @@map("users")
 }
 
 model Expo {
-  id                   String           @id @default(cuid())
+  id                   String     @id @default(cuid())
   createdById          String
-  createdBy            User             @relation("CreatedExpos", fields: [createdById], references: [id])
+  createdBy            User       @relation("CreatedExpos", fields: [createdById], references: [id])
   name                 String
-  slug                 String           @unique
+  slug                 String     @unique
   description          String?
   coverImageUrl        String?
   startAt              DateTime
@@ -58,26 +67,27 @@ model Expo {
   venueName            String
   venueAddress         String
   capacity             Int?
-  status               ExpoStatus       @default(Draft)
-  registrationEnabled  Boolean          @default(false)
+  status               ExpoStatus @default(Draft)
+  registrationEnabled  Boolean    @default(false)
   registrationDeadline DateTime?
-  createdAt            DateTime         @default(now())
-  updatedAt            DateTime         @updatedAt
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
 
-  categories           ExpoCategory[]
-  memberships          ExpoMembership[]
+  categories  ExpoCategory[]
+  memberships ExpoMembership[]
+  invitations Invitation[]
 
   @@map("expos")
 }
 
 model Category {
-  id        String         @id @default(cuid())
-  name      String         @unique
-  slug      String         @unique
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  expos     ExpoCategory[]
+  expos ExpoCategory[]
 
   @@map("categories")
 }
@@ -87,8 +97,8 @@ model ExpoCategory {
   categoryId String
   assignedAt DateTime @default(now())
 
-  expo       Expo     @relation(fields: [expoId], references: [id], onDelete: Cascade)
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  expo     Expo     @relation(fields: [expoId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@id([expoId, categoryId])
   @@map("expo_categories")
@@ -103,9 +113,28 @@ model ExpoMembership {
   joinedAt  DateTime         @default(now())
   removedAt DateTime?
 
-  expo      Expo             @relation(fields: [expoId], references: [id], onDelete: Cascade)
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expo Expo @relation(fields: [expoId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([expoId, userId])
   @@map("expo_memberships")
+}
+
+model Invitation {
+  id            String           @id @default(cuid())
+  expoId        String
+  inviterUserId String
+  inviteeUserId String
+  status        InvitationStatus @default(Pending)
+  createdAt     DateTime         @default(now())
+  respondedAt   DateTime?
+  revokedAt     DateTime?
+
+  expo        Expo @relation(fields: [expoId], references: [id], onDelete: Cascade)
+  inviterUser User @relation("SentInvitations", fields: [inviterUserId], references: [id], onDelete: Cascade)
+  inviteeUser User @relation("ReceivedInvitations", fields: [inviteeUserId], references: [id], onDelete: Cascade)
+
+  @@index([expoId, inviteeUserId])
+  @@index([inviteeUserId, status])
+  @@map("invitations")
 }
